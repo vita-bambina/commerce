@@ -5,15 +5,9 @@ const router = express.Router();
 const authMiddleware =
 require("../middleware/authMiddleware");
 
-const {
-    checkout
-} = require("../controllers/orderController");
+const {checkout} = require("../controllers/orderController");
 
 
-router.post(
-    "/checkout",
-    authMiddleware,
-    checkout
-);
+router.post("/checkout",authMiddleware,checkout);
 
 module.exports = router;
