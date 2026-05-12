@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
+    
 
     if (!token) {
         return res.status(401).json({
@@ -12,8 +13,7 @@ const authMiddleware = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
+            token, process.env.JWT_SECRET
         );
 
         req.user = decoded;
@@ -27,14 +27,4 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-const adminMiddleware = (req, res, next) => {
-    if (req.user.role === "admin") {
-        next(); // allow access
-    } else {
-        return res.status(403).json({
-            message: "Admins only"
-        });
-    }
-};
-
-module.exports = {adminMiddleware, authMiddleware};
+module.exports =authMiddleware;

@@ -2,9 +2,10 @@ const db = require("../db");
 
 
 // CREATE PRODUCT
-const createProduct = (req, res) => {
+const addProducts = (req, res) => {
 
-    const { name, description, price, image } = req.body;
+    const { name, description, price } = req.body;
+const image = req.file.filename;
 
     const user_id = req.user.id;
 
@@ -24,7 +25,6 @@ const createProduct = (req, res) => {
 
 const getProducts = (req, res) => {
     db.query("SELECT * FROM products",(err, result) => {
-
             if (err) {
                 return res.status(500).json(err);
             }
@@ -37,26 +37,18 @@ const getProducts = (req, res) => {
 
 // GET SINGLE PRODUCT
 const getSingleProduct = (req, res) => {
-    
+
     const { id } = req.params;
 
-    db.query(
-        "SELECT * FROM products WHERE id = ?",
-        [id],
+    db.query("SELECT * FROM products WHERE id = ?",[id],
         (err, result) => {
-
             if (err) {
                 return res.status(500).json(err);
             }
-
             res.json(result[0]);
         }
     );
 };
 
 
-module.exports = {
-    createProduct,
-    getProducts,
-    getSingleProduct
-};
+module.exports = {addProducts,getProducts,getSingleProduct};

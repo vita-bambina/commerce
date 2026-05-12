@@ -28,7 +28,17 @@ app.get("/", (req, res) => {
     res.send("Ecommerce API is running");
 });
 
+const fs = require("fs");
+const path = require("path");
+
+const uploadDir = path.resolve(__dirname, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
 
 app.listen(4001, () => {
     console.log(`Server running on http://localhost:4001`);
 });
+

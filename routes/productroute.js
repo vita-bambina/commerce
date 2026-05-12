@@ -4,13 +4,11 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
+const upload = require("../middleware/upload");
 
-const {createProduct,getProducts,getSingleProduct} = require("../controllers/productController");
-
-
+const {addProducts,getProducts,getSingleProduct,} = require("../controllers/productController");
 // protected
-router.post( "/products",authMiddleware,createProduct);
-router.post("/add", authMiddleware, adminMiddleware, addProduct);
+router.post( "/addProducts",authMiddleware, adminMiddleware,upload.single("image"), addProducts);
 
 
 // public
