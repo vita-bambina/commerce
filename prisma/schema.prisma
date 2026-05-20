@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+}
+
+model cart {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  product_id Int
+  quantity   Int      @default(1)
+  created_at DateTime @default(now())
+
+  @@index([product_id], map: "Cart_product_id_fkey")
+  @@index([user_id], map: "Cart_user_id_fkey")
+}
+
+model order {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  total      Float
+  status     String   @default("pending")
+  created_at DateTime @default(now())
+
+  @@index([user_id], map: "Order_user_id_fkey")
+}
+
+model orderitem {
+  id         Int   @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int
+  price      Float
+  vat        Float
+  @@index([order_id], map: "OrderItem_order_id_fkey")
+  @@index([product_id], map: "OrderItem_product_id_fkey")
+}
+
+model product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  user_id     Int?
+  created_at  DateTime @default(now())
+
+  @@index([user_id], map: "Product_user_id_fkey")
+}
+
+model user {
+  id         Int       @id @default(autoincrement())
+  first_name String?
+  last_name  String?
+  email     String    @unique(map: "User_e_mail_key")
+  user_name  String?
+  tel        String?
+  password   String?
+  created_at DateTime  @default(now())
+  role       user_role @default(user)
+}
+
+enum user_role {
+  user
+  admin
+}

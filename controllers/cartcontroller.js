@@ -1,62 +1,52 @@
-const db = require("../db");
-
-
+const prisma = require("../prismaClient");
 // ADD TO CART
-const addToCart = (req, res) => {
+const addToCart = async (req, res) => {
+  const { product_id, quantity } = req.body;
+  const user_id = req.user.id;
 
-    const { product_id, quantity } = req.body;
+  try {
+    const cartItem = await prisma.cart.create({
+      data: {
+        user_id,
+        product_id,
+        quantity
+      }
+    });
 
-    const user_id = req.user.id;
+    res.json({
+      msg: "Added to cart",
+      cartItem
+    });
 
-    db.query(
-        "INSERT INTO cart(user_id,product_id,quantity) VALUES(?,?,?)",
-        [
-            user_id,
-            product_id,
-            quantity
-        ],
-        (err, data) => {
-
-            if (err) {
-                return res.status(500).json(err);
-            }
-
-            res.json({
-                msg: "Added to cart"
-            });
-        }
-    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
+// GET CART
+const getCart = async (req, res) => {
+  const user_id = req.user.id;
 
+  try {
+    const cart = await prisma.cart.findMany({
+      where: {
+        user_id
+      },
+      include: {
+        product: true   // this replaces SQL JOIN
+      }
+    });
 
-// GET USER CART
-const getCart = (req, res) => {
+    const formattedCart = cart.map(item => ({
+      id: item.id,
+      name: item.product.name,
+      price: item.product.price,
+      quantity: item.quantity
+    }));
 
-    const user_id = req.user.id;
+    res.json(formattedCart);
 
-    db.query(
-        `SELECT cart.id,
-                products.name,
-                products.price,
-                cart.quantity
-         FROM cart
-         JOIN products
-         ON cart.product_id = products.id
-         WHERE cart.user_id = ?`,
-        [user_id],
-        (err, result) => {
-
-            if (err) {
-                return res.status(500).json(err);
-            }
-
-            res.json(result);
-        }
-    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
-
-
-module.exports = {
-    addToCart,
-    getCart
-};
+module.exports = {addToCart,getCart};

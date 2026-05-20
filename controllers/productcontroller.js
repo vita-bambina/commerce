@@ -1,54 +1,65 @@
-const db = require("../db");
-
+const prisma = require("../prismaClient");
 
 // CREATE PRODUCT
-const addProducts = (req, res) => {
+const addProducts = async (req, res) => {
+  const { name, description, price } = req.body;
+  const image = req.file.filename;
+  const user_id = req.user.id;
 
-    const { name, description, price } = req.body;
-const image = req.file.filename;
+  try {
+    const product = await prisma.product.create({
+      data: { name,description,price: parseFloat(price),image, user_id
+      }
+    });
 
-    const user_id = req.user.id;
+    res.json({
+      msg: "Product created",product
+    });
 
-    db.query("INSERT INTO products(name,description,price,image,user_id) VALUES(?,?,?,?,?)" , [name,description,price,image,user_id],
-        (err, data) => {
-
-            if (err) {
-                return res.status(500).json(err);
-            }
-
-            res.json({
-                msg: "Product created"
-            });
-        }
-    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
+const getProducts = async (req, res) => {
+  const { name, description, price } = req.body;
+  const image = req.file.filename;
+  const user_id = req.user.id;
 
-const getProducts = (req, res) => {
-    db.query("SELECT * FROM products",(err, result) => {
-            if (err) {
-                return res.status(500).json(err);
-            }
+  try {
+    const product = await prisma.product.create({
+      data: {name,description,price: parseFloat(price),image,user_id
+      }
+    });
 
-            res.json(result);
-        }
-    );
-};
+    res.json({
+      msg: "Product created",product
+    });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
 
 // GET SINGLE PRODUCT
-const getSingleProduct = (req, res) => {
-
+const getSingleProduct = async (req, res) => {
     const { id } = req.params;
 
-    db.query("SELECT * FROM products WHERE id = ?",[id],
-        (err, result) => {
-            if (err) {
-                return res.status(500).json(err);
-            }
-            res.json(result[0]);
-        }
-    );
-};
+  try {
+    const product = await prisma.product.findUnique({
+      where: {
+        id: parseInt(id)
+      }
+    });
 
+    if (!product) {
+      return res.status(404).json({ msg: "Product not found" });
+    }
+
+    res.json(product);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 module.exports = {addProducts,getProducts,getSingleProduct};

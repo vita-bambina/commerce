@@ -1,85 +1,54 @@
-const db = require("../db");
+const prisma = require("../prismaClient");
 
+const checkout = async (req, res) => {
+  const user_id = req.user.id;
 
-// CHECKOUT
-const checkout = (req, res) => {
+  try {
+    // 1. get cart items
+    const cartItems = await prisma.cart.findMany({
+      where: { user_id },
+      include: { product: true }
+    });
 
-    const user_id = req.user.id;
+    if (cartItems.length === 0) {
+      return res.json({ msg: "Cart is empty" });
+    }
 
-    // get cart items
-    db.query(
-        `SELECT cart.*,
-                products.price
-         FROM cart
-         JOIN products
-         ON cart.product_id = products.id
-         WHERE cart.user_id = ?`,
-        [user_id],
-        (err, cartItems) => {
+    // 2. calculate total
+    let total = 0;
 
-            if (err) {
-                return res.status(500).json(err);
-            }
+    cartItems.forEach(item => {
+      total += item.product.price * item.quantity;
+    });
 
-            if (cartItems.length === 0) {
-                return res.json({
-                    msg: "Cart is empty"
-                });
-            }
+    // 3. create order
+    const order = await prisma.order.create({
+      data: { user_id,total}
+    });
 
-            // calculate total
-            let total = 0;
-
-            cartItems.forEach(item => {
-                total +=
-                    item.price * item.quantity;
-            });
-
-            // create order
-            db.query(
-                "INSERT INTO orders(user_id,total) VALUES(?,?)",
-                [user_id, total],
-                (err, orderData) => {
-
-                    if (err) {
-                        return res.status(500).json(err);
-                    }
-
-                    const order_id =
-                    orderData.insertId;
-
-                    // insert order items
-                    cartItems.forEach(item => {
-
-                        db.query(
-                            `INSERT INTO order_items
-                            (order_id,product_id,quantity,price)
-                            VALUES(?,?,?,?)`,
-                            [
-                                order_id,
-                                item.product_id,
-                                item.quantity,
-                                item.price
-                            ]
-                        );
-                    });
-
-                    // clear cart
-                    db.query(
-                        "DELETE FROM cart WHERE user_id = ?",
-                        [user_id]
-                    );
-
-                    res.json({
-                        msg: "Checkout successful"
-                    });
-                }
-            );
+    // 4. create order items
+    for (const item of cartItems) {
+      await prisma.order_Item.create({
+        data: {
+          order_id: order.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.product.price,
+          vat: 0
         }
-    );
+      });
+    }
+
+    // 5. clear cart
+    await prisma.cart.deleteMany({
+      where: { user_id }
+    });
+
+    return res.json({ msg: "Checkout successful" });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 };
 
-
-module.exports = {
-    checkout
-};
+module.exports = { checkout };

@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+require("dotenv").config();
 
 dotenv.config();
 
@@ -21,7 +22,6 @@ app.use("/api/cart", cartroute);
 app.use("/api/orders", orderroute);
 
 // connect database
-require("./db");
 
 // test route
 app.get("/", (req, res) => {
